@@ -37,9 +37,26 @@ class _HistorialContentState extends State<HistorialContent> {
   }
 
   List<String> _getCategories(List<Category> allCategories) {
+    // Si no hay tipo seleccionado o es "Tipo", mostrar todas las categorías
+    if (_selectedType == 'Tipo') {
+      return [
+        'Todas',
+        ...allCategories.map((category) => category.name).toList(),
+      ];
+    }
+
+    // Filtrar categorías según el tipo seleccionado
+    CategoryType filterType = _selectedType == 'Gastos'
+        ? CategoryType.gastos
+        : CategoryType.ingresos;
+
+    List<Category> filteredCategories = allCategories
+        .where((category) => category.type == filterType)
+        .toList();
+
     return [
       'Todas',
-      ...allCategories.map((category) => category.name).toList(),
+      ...filteredCategories.map((category) => category.name).toList(),
     ];
   }
 
@@ -386,6 +403,8 @@ class _HistorialContentState extends State<HistorialContent> {
                                                   setState(() {
                                                     _selectedType =
                                                         newValue ?? 'Tipo';
+                                                    // Resetear categoría seleccionada cuando cambie el tipo
+                                                    _selectedCategory = null;
                                                   });
                                                 },
                                               ),

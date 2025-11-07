@@ -63,10 +63,27 @@ class HistorialBloc extends Bloc<HistorialEvent, HistorialState> {
 
       // Crear mapa de categorías por ID
       Map<String, String> categoriesMap = {};
+
+      // Agregar categorías personalizadas de Firebase
       for (var doc in categoriasSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        categoriesMap[doc.id] = data['name'] ?? 'Sin nombre';
+        categoriesMap[doc.id] =
+            data['nombre'] ??
+            'Sin nombre'; // CORREGIDO: 'nombre' en lugar de 'name'
       }
+
+      // Agregar categorías predeterminadas al mapa
+      categoriesMap['comida_default'] = 'Comida';
+      categoriesMap['transporte_default'] = 'Transporte';
+      categoriesMap['servicios_default'] = 'Servicios';
+      categoriesMap['entretenimiento_default'] = 'Entretenimiento';
+      categoriesMap['salud_default'] = 'Salud';
+      categoriesMap['otros_gastos_default'] = 'Otros';
+      categoriesMap['salario_default'] = 'Salario';
+      categoriesMap['negocio_default'] = 'Negocio';
+      categoriesMap['freelance_default'] = 'Freelance';
+      categoriesMap['inversiones_default'] = 'Inversiones';
+      categoriesMap['otros_ingresos_default'] = 'Otros';
 
       List<Map<String, dynamic>> historial = [];
 
@@ -119,33 +136,48 @@ class HistorialBloc extends Bloc<HistorialEvent, HistorialState> {
       print('=== END DEBUG HistorialBloc ===');
 
       // Agregar ingresos al historial
+      print('=== DEBUG INGRESOS ===');
+      print('ingresosSnapshot.docs.length: ${ingresosSnapshot.docs.length}');
+
       for (var doc in ingresosSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        print('Ingreso doc ID: ${doc.id}');
+        print('Ingreso data: $data');
+
         String categoryName = 'Sin categoría';
 
         // Priorizar id_categoria, si no existe usar concepto
         if (data['id_categoria'] != null) {
           categoryName =
               categoriesMap[data['id_categoria']] ?? 'Categoría eliminada';
+          print('Using id_categoria: ${data['id_categoria']} -> $categoryName');
         } else if (data['concepto'] != null) {
           categoryName = data['concepto'];
+          print('Using concepto: $categoryName');
         }
+
+        print('Final categoryName for ingreso: "$categoryName"');
 
         // Filtrar categorías no deseadas
         if (_isValidCategory(categoryName)) {
-          historial.add({
+          final ingresoItem = {
             'categoria': categoryName,
             'monto': (data['importe'] ?? 0.0)
                 .toDouble(), // Usar 'importe' en lugar de 'monto'
-            'descripción': 'Ingreso',
+            'descripcion': 'Ingreso', // CORREGIDO: sin tilde para consistencia
             'fecha':
                 data['fecha']?.toDate() ??
                 DateTime.now(), // Usar 'fecha' en lugar de 'fecha_creacion'
             'imageUrl':
                 data['url_archivo'], // Incluir URL de la imagen (campo correcto)
-          });
+          };
+          print('Adding ingreso to historial: $ingresoItem');
+          historial.add(ingresoItem);
         }
       }
+
+      print('=== END DEBUG INGRESOS ===');
+      print('Total historial items (gastos + ingresos): ${historial.length}');
 
       // Ordenar por fecha (más recientes primero)
       historial.sort(
