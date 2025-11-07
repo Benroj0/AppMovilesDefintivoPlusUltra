@@ -28,12 +28,12 @@ class _ExportarContentBody extends StatefulWidget {
 }
 
 class _ExportarContentBodyState extends State<_ExportarContentBody> {
-  String? selectedPeriod;
+  String? selectedPeriod = 'Mes actual'; // Inicializar con mes actual
   DateTime? customStartDate;
   DateTime? customEndDate;
 
   final List<String> periods = [
-    'Mes actual (Octubre)',
+    'Mes actual',
     'Últimos 30 días',
     'Últimos 90 días',
     'Últimos 365 días',
@@ -44,7 +44,15 @@ class _ExportarContentBodyState extends State<_ExportarContentBody> {
   Widget build(BuildContext context) {
     return BlocListener<ExportarBloc, ExportarState>(
       listener: (context, state) {
-        if (state is ExportarSuccess) {
+        if (state is ExportarPeriodSelected) {
+          setState(() {
+            selectedPeriod = state.selectedPeriod;
+            if (state.selectedPeriod == 'Costumbre') {
+              customStartDate = state.startDate;
+              customEndDate = state.endDate;
+            }
+          });
+        } else if (state is ExportarSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
